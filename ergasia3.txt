@@ -13,6 +13,12 @@ pos_print:      .asciiz "Position "
 posv2_print:    .asciiz "Position: "
 val_print:      .asciiz " Value: "
 print_elmnt:    .asciiz " :"   
+msg3: .asciiz "Creating Sparse Array A"
+msg4: .asciiz "Creating Sparse Array B"
+msg5: .asciiz "Creating Sparse Array C = A + B"
+vals: .asciiz " values"
+
+
         .text
 main:
     # Print options
@@ -51,8 +57,69 @@ case_2:
 
     j go_to_main_loop
 case_3:
+    la $a0, msg3
+    li $v0, 4
+    syscall
+
+    la $a0, pinA
+    la $a1, SparseA
+    jal createSparse
+    sw $v0, mikosA
+
+    div $v0, $v0, 2
+    move $v0, $a0
+    li $v0, 1
+    syscall
+
+    la $a0, vals
+    li $v0, 4
+    syscall
+    
 case_4:
+    la $a0, msg4
+    li $v0, 4
+    syscall
+
+    la $a0, pinB
+    la $a1, SparseB
+    jal createSparse
+    sw $v0, mikosB
+
+    div $v0, $v0, 2
+    move $v0, $a0
+    li $v0, 1
+    syscall
+
+    la $a0, vals
+    li $v0, 4
+    syscall
+
 case_5:
+    la $a0, msg5
+    li $v0, 4
+    syscall
+
+    la $a0, SparseA
+    la $a1, mikosA
+    la $a2, SparseB
+    la $a3, mikosB
+
+    add $sp,$sp,-4
+    lw $t0, SparseC
+    sw $t0, ($sp)
+
+    jal sum
+    sw $v0, mikosC
+
+    div $v0, $v0, 2
+    move $v0, $a0
+    li $v0, 1
+    syscall
+
+    la $a0, vals
+    li $v0, 4
+    syscall
+
 case_6:
     la $a1, SparseA
     lw $a2, mikosA
@@ -113,6 +180,38 @@ readPin:
 
     j readPin
 
+createSparse:
+    move $a0, $t0
+    move $a1, $t1
+
+    li $t2, 0
+    li $t3, 0
+
+    li $t4, 10 # array length
+
+    loop_createSparse:
+    beq $t2, $t4, exit_createSparse
+
+    add $t5, $t3, $t0
+    lw $t5, ($t5)
+    beqz $t5, continue
+
+    sw $t2, ($t1)
+    addi $t1, 1
+    addi $t3, 1
+    sw $t5, ($t1)
+    addi $t1, 1
+    addi $t3, 1
+
+    continue:
+    addi $t2, 1
+    j createSparse
+
+    exit_createSparse:
+    move $t3, $v0
+    j go_back
+
+
 printSparse:
     # $a1 = int[] Sparse
     # $a2 = int mikos
@@ -144,7 +243,7 @@ printSparse:
 
     j printSparse
 
-add:
+sum:
 
     add $sp,$sp,-4
     sw $s1, ($sp)
@@ -161,10 +260,10 @@ add:
     li $t6, 0
     li $t7, 0
 
-    loop:
+    while:
 
-    bgt $t5, $t1, a
-    bgt $t6, $t3, a
+    bgt $t5, $t1, alpha
+    bgt $t6, $t3, alpha
 
     add $t8, $t5, $t0
     lw $t8, ($t8)
@@ -175,7 +274,7 @@ add:
     blt $t8, $t9, less
     bgt $t8, $t9, more
 
-    sw $t8, $t4
+    sw $t8, ($t4)
     addi $t4, 1
     addi $t5, 1
     addi $t6, 1
@@ -189,67 +288,67 @@ add:
 
     add $s0, $t8, $t9
 
-    sw $s0, $t4
+    sw $s0, ($t4)
 
     addi $t4, 1
     addi $t5, 1
     addi $t6, 1
     addi $t7, 1
 
-    j a
+    j while
 
     less:
-    sw $t8, $t4
+    sw $t8, ($t4)
     addi $t5, 1
     addi $t7, 1
 
     add $t8, $t5, $t0
     lw $t8, ($t8)
 
-    sw $t8, $t4
+    sw $t8, ($t4)
     addi $t5, 1
     addi $t7, 1
 
-    j a
+    j while
 
     more:
-    sw $t9, $t4
+    sw $t9, ($t4)
     addi $t6, 1
     addi $t7, 1
 
     add $t9, $t6, $t2
     lw $t9, ($t9)
 
-    sw $t9, $t4
+    sw $t9, ($t4)
     addi $t6, 1
     addi $t7, 1
 
-    a:
-    bgt $t5, $t1, b
+    alpha:
+    bgt $t5, $t1, beta
 
-    sw $t8, $t4
+    sw $t8, ($t4)
     addi $t5, 1
     addi $t7, 1
 
     add $t8, $t5, $t0
     lw $t8, ($t8)
 
-    sw $t8, $t4
+    sw $t8, ($t4)
     addi $t5, 1
     addi $t7, 1
 
 
-    b:
+    beta:
     bgt $t6, $t3, return
 
-    sw $t9, $t4
+    sw $t9, ($t4)
     addi $t6, 1
     addi $t7, 1
 
     add $t9, $t6, $t2
     lw $t9, ($t9)
 
-    sw $t9, $t4
+    sw $t9, ($t4)
     addi $t6, 1
     addi $t7, 1
 
