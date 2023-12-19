@@ -1,12 +1,13 @@
         .data
-pinA:   .space 40
-pinB:   .space 40
-SparseA:   .space 80
-SparseB:   .space 80
+        .align 6
+pinA:   .word 0, 0, 0, 2, 0, 0, 0, 0, 3, 0
+pinB:   .word 0, 5, 0, 0, 0, 0, 7, 0, 0, 0
+SparseA:   .space 40
+SparseB:   .space 40
 SparseC:   .space 80
 op:     .space 4
-mikosA:     .word 0
-mikosB:     .word 0
+mikosA:     .word 10
+mikosB:     .word 10
 mikosC:     .word 0
 options_print:    .asciiz "\n-----------------------------\n1. Read Array A\n2. Read Array B\n3. Create Sparse Array A\n4. Create Sparse Array B\n5. Create Sparse Array C = A + B\n6. Display Sparse Array A\n7. Display Sparse Array B\n8. Display Sparse Array C\n0. Exit\n-----------------------------\nChoice? "
 pos_print:      .asciiz "Position "
@@ -14,9 +15,9 @@ posv2_print:    .asciiz "Position: "
 val_print:      .asciiz " Value: "
 print_elmnt:    .asciiz " :"   
 new_line:       .asciiz "\n"
-msg3: .asciiz "Creating Sparse Array A"
-msg4: .asciiz "Creating Sparse Array B"
-msg5: .asciiz "Creating Sparse Array C = A + B"
+msg3: .asciiz "Creating Sparse Array A\n"
+msg4: .asciiz "Creating Sparse Array B\n"
+msg5: .asciiz "Creating Sparse Array C = A + B\n"
 vals: .asciiz " values"
 he:     .asciiz "Case 1"
 hehe:     .asciiz "Case 2"
@@ -70,13 +71,15 @@ case_3:
     sw $v0, mikosA
 
     div $v0, $v0, 2
-    move $v0, $a0
+    move $a0, $v0
     li $v0, 1
     syscall
 
     la $a0, vals
     li $v0, 4
     syscall
+
+    j go_to_main_loop
     
 case_4:
     la $a0, msg4
@@ -89,13 +92,15 @@ case_4:
     sw $v0, mikosB
 
     div $v0, $v0, 2
-    move $v0, $a0
+    move $a0, $v0
     li $v0, 1
     syscall
 
     la $a0, vals
     li $v0, 4
     syscall
+
+    j go_to_main_loop
 
 case_5:
     la $a0, msg5
@@ -103,25 +108,27 @@ case_5:
     syscall
 
     la $a0, SparseA
-    la $a1, mikosA
+    lw $a1, mikosA
     la $a2, SparseB
-    la $a3, mikosB
+    lw $a3, mikosB
 
-    add $sp,$sp,-4
-    lw $t0, SparseC
+    add $sp, $sp, -4
+    la $t0, SparseC
     sw $t0, ($sp)
 
-    jal sum
+    jal addSparse
     sw $v0, mikosC
 
     div $v0, $v0, 2
-    move $v0, $a0
+    move $a0, $v0
     li $v0, 1
     syscall
 
     la $a0, vals
     li $v0, 4
     syscall
+
+    j go_to_main_loop
 
 case_6:
     li $t2, 0
@@ -191,8 +198,8 @@ readPin:
     j readPin
 
 createSparse:
-    move $a0, $t0
-    move $a1, $t1
+    move $t0, $a0
+    move $t1, $a1
 
     li $t2, 0
     li $t3, 0
@@ -202,23 +209,25 @@ createSparse:
     loop_createSparse:
     beq $t2, $t4, exit_createSparse
 
-    add $t5, $t3, $t0
+    mul $t2, $t2, 4
+    add $t5, $t2, $t0
+    div $t2, $t2, 4
     lw $t5, ($t5)
     beqz $t5, continue
 
     sw $t2, ($t1)
-    addi $t1, 1
+    addi $t1, 4
     addi $t3, 1
     sw $t5, ($t1)
-    addi $t1, 1
+    addi $t1, 4
     addi $t3, 1
 
     continue:
     addi $t2, 1
-    j createSparse
+    j loop_createSparse
 
     exit_createSparse:
-    move $t3, $v0
+    move $v0, $t3
     j go_back
 
 
@@ -253,120 +262,153 @@ printSparse:
 
     j printSparse
 
-sum:
+addSparse:
+    add $sp, $sp, -4
+    sw $s0, ($sp)
 
-    add $sp,$sp,-4
+    add $sp, $sp, -4
     sw $s1, ($sp)
 
-    move $a0, $t0
-    move $a1, $t1
-    move $a2, $t2
-    move $a3, $t3
+    add $sp, $sp, -4
+    sw $s2, ($sp)
 
-    lw $t4, ($sp)
-    add $sp,$sp,4
+    move $t0, $a0
+    move $t1, $a1
+    move $t2, $a2
+    move $t3, $a3
+
+    la $t4, ($sp)
+    add $sp, $sp, 4
 
     li $t5, 0
     li $t6, 0
     li $t7, 0
 
     while:
-
     bgt $t5, $t1, alpha
+    beq $t5, $t1, alpha
     bgt $t6, $t3, alpha
+    beq $t6, $t3, alpha
 
-    add $t8, $t5, $t0
-    lw $t8, ($t8)
+    mul $t5, $t5, 4
+    add $s0, $t5, $t0
+    div $t5, $t5, 4
+    lw $s0, ($s0)
 
-    add $t9, $t6, $t2
-    lw $t9, ($t9)
+    mul $t6, $t6, 4
+    add $s1, $t6, $t2
+    div $t6, $t6, 4
+    lw $s1, ($s1)
 
-    blt $t8, $t9, less
-    bgt $t8, $t9, more
+    blt $s0, $s1, less
+    bgt $s0, $s1, more
 
-    sw $t8, ($t4)
-    addi $t4, 1
+    sw $s0, ($t4)
+    addi $t4, 4
     addi $t5, 1
-    addi $t6, 1
+    addi $t6, 4
     addi $t7, 1
 
-    add $t8, $t5, $t0
-    lw $t8, ($t8)
+    mul $t5, $t5, 4
+    add $s0, $t5, $t0
+    div $t5, $t5, 4
+    lw $s0, ($s0)
 
-    add $t9, $t6, $t2
-    lw $t9, ($t9)
+    mul $t6, $t6, 4
+    add $s1, $t6, $t2
+    div $t6, $t6, 4
+    lw $s1, ($s1)
 
-    add $s0, $t8, $t9
+    add $s0, $s0, $s1
 
     sw $s0, ($t4)
 
-    addi $t4, 1
+    addi $t4, 4
     addi $t5, 1
-    addi $t6, 1
+    addi $t6, 4
     addi $t7, 1
 
     j while
 
     less:
-    sw $t8, ($t4)
+    sw $s0, ($t4)
     addi $t5, 1
     addi $t7, 1
 
-    add $t8, $t5, $t0
-    lw $t8, ($t8)
+    mul $t5, $t5, 4
+    add $s0, $t5, $t0
+    div $t5, $t5, 4
+    lw $s0, ($s0)
 
-    sw $t8, ($t4)
+    sw $s0, ($t4)
     addi $t5, 1
     addi $t7, 1
 
     j while
 
     more:
-    sw $t9, ($t4)
+    sw $s1, ($t4)
     addi $t6, 1
     addi $t7, 1
 
-    add $t9, $t6, $t2
-    lw $t9, ($t9)
+    mul $t6, $t6, 4
+    add $s1, $t6, $t2
+    div $t6, $t6, 4
+    lw $s1, ($s1)
 
-    sw $t9, ($t4)
+    sw $s1, ($t4)
     addi $t6, 1
     addi $t7, 1
+
+    j while
 
     alpha:
     bgt $t5, $t1, beta
+    beq $t5, $t1, beta
 
-    sw $t8, ($t4)
+    sw $s0, ($t4)
     addi $t5, 1
     addi $t7, 1
 
-    add $t8, $t5, $t0
-    lw $t8, ($t8)
+    mul $t5, $t5, 4
+    add $s0, $t5, $t0
+    div $t5, $t5, 4
+    lw $s0, ($s0)
 
-    sw $t8, ($t4)
+    sw $s0, ($t4)
     addi $t5, 1
     addi $t7, 1
 
+    j alpha
 
     beta:
     bgt $t6, $t3, return
+    beq $t6, $t3, return
 
-    sw $t9, ($t4)
+    sw $s1, ($t4)
     addi $t6, 1
     addi $t7, 1
 
-    add $t9, $t6, $t2
-    lw $t9, ($t9)
+    mul $t6, $t6, 4
+    add $s1, $t6, $t2
+    div $t6, $t6, 4
+    lw $s1, ($s1)
 
-    sw $t9, ($t4)
+    sw $s1, ($t4)
     addi $t6, 1
     addi $t7, 1
+
+    j beta
 
     return:
+    lw $s2, ($sp)
+    add $sp, $sp, 4
     lw $s1, ($sp)
     add $sp, $sp, 4
+    lw $s0, ($sp)
+    add $sp, $sp, 4
 
-    move $t7, $v0
+    move $v0, $t7
 
     jr $ra
 
