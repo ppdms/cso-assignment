@@ -242,7 +242,7 @@ printSparse:
     li $v0, 4
     syscall
 
-    la $a0, 0($a1)  # Sparse [i++]
+    lw $a0, 0($a1)  # Sparse [i++]
     li $v0, 1
     syscall
 
@@ -253,8 +253,12 @@ printSparse:
     li $v0, 4
     syscall
 
-    la $a0, 0($a1)  # Sparse [i++]
+    lw $a0, 0($a1)  # Sparse [i++]
     li $v0, 1
+    syscall
+
+    la $a0, new_line # "\n"
+    li $v0, 4
     syscall
 
     add $t2, $t2, 1
