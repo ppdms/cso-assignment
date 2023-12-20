@@ -2,8 +2,11 @@
         .align 6
 pinA:   .word 0, 0, 0, 2, 0, 0, 0, 0, 3, 0
 pinB:   .word 0, 5, 0, 0, 0, 0, 7, 0, 0, 0
+        .align 6
 SparseA:   .space 40
+        .align 6
 SparseB:   .space 40
+        .align 7
 SparseC:   .space 80
 op:     .space 4
 mikosA:     .word 10
@@ -267,6 +270,9 @@ printSparse:
     j printSparse
 
 addSparse:
+    lw $t4, ($sp)
+    add $sp, $sp, 4
+
     add $sp, $sp, -4
     sw $s0, ($sp)
 
@@ -280,9 +286,6 @@ addSparse:
     move $t1, $a1
     move $t2, $a2
     move $t3, $a3
-
-    la $t4, ($sp)
-    add $sp, $sp, 4
 
     li $t5, 0
     li $t6, 0
@@ -335,6 +338,7 @@ addSparse:
     j while
 
     less:
+
     sw $s0, ($t4)
     addi $t5, 1
     addi $t7, 1
@@ -344,9 +348,11 @@ addSparse:
     div $t5, $t5, 4
     lw $s0, ($s0)
 
+    addi $t4, 4
     sw $s0, ($t4)
     addi $t5, 1
     addi $t7, 1
+    addi $t4, 4
 
     j while
 
@@ -360,9 +366,11 @@ addSparse:
     div $t6, $t6, 4
     lw $s1, ($s1)
 
+    addi $t4, 4
     sw $s1, ($t4)
     addi $t6, 1
     addi $t7, 1
+    addi $t4, 4
 
     j while
 
@@ -373,6 +381,7 @@ addSparse:
     sw $s0, ($t4)
     addi $t5, 1
     addi $t7, 1
+    addi $t4, 4
 
     mul $t5, $t5, 4
     add $s0, $t5, $t0
@@ -382,6 +391,7 @@ addSparse:
     sw $s0, ($t4)
     addi $t5, 1
     addi $t7, 1
+    addi $t4, 4
 
     j alpha
 
@@ -392,6 +402,7 @@ addSparse:
     sw $s1, ($t4)
     addi $t6, 1
     addi $t7, 1
+    addi $t4, 4
 
     mul $t6, $t6, 4
     add $s1, $t6, $t2
@@ -401,6 +412,7 @@ addSparse:
     sw $s1, ($t4)
     addi $t6, 1
     addi $t7, 1
+    addi $t4, 4
 
     j beta
 
