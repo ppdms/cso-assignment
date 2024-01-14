@@ -1,12 +1,8 @@
         .data
-        .align 6
-pinA:   .word 0, 0, 0, 2, 0, 0, 0, 0, 3, 0
-pinB:   .word 0, 5, 0, 0, 0, 0, 7, 0, 0, 0
-        .align 6
-SparseA:   .space 40
-        .align 6
-SparseB:   .space 40
-        .align 7
+pinA:   .space 40
+pinB:   .space 40
+SparseA:   .space 80
+SparseB:   .space 80
 SparseC:   .space 80
 op:     .space 4
 mikosA:     .word 10
@@ -187,13 +183,11 @@ readPin:
     li $v0, 4
     syscall
 
-    lw $a0, 0($a1)      # pos[i]
-    li $v0, 1
+    la $v0, 5   # $v0 -> in.nextInt()
     syscall
 
-    la $a0, new_line # "\n"
-    li $v0, 4
-    syscall
+    move $a0, $v0
+    sw $a0, 0($a1) # pin[i] = in.nextInt();
 
     add $t2, $t2, 1  # counter++
     add $a1, $a1, 4  # -> nextInt 
