@@ -264,7 +264,7 @@ printSparse:
     j printSparse
 
 addSparse:
-    lw $t4, ($sp)
+    lw $t4, ($sp) # C ptr
     add $sp, $sp, 4
 
     add $sp, $sp, -4
@@ -276,14 +276,14 @@ addSparse:
     add $sp, $sp, -4
     sw $s2, ($sp)
 
-    move $t0, $a0
-    move $t1, $a1
-    move $t2, $a2
-    move $t3, $a3
+    move $t0, $a0 # A ptr
+    move $t1, $a1 # A len
+    move $t2, $a2 # B ptr
+    move $t3, $a3 # B len
 
-    li $t5, 0
-    li $t6, 0
-    li $t7, 0
+    li $t5, 0 # a
+    li $t6, 0 # b
+    li $t7, 0 # c
 
     while:
     bgt $t5, $t1, alpha
@@ -304,30 +304,30 @@ addSparse:
     blt $s0, $s1, less
     bgt $s0, $s1, more
 
-    sw $s0, ($t4)
-    addi $t4, 4
-    addi $t5, 1
-    addi $t6, 4
-    addi $t7, 1
+    sw $s0, ($t4) # SparceC[c] = SparseA[a]
+    addi $t4, 4 # SparseC[c] = SparseC[c] + 4
+    addi $t5, 1 # a++
+    addi $t6, 1 # b++
+    addi $t7, 1 # c++
 
-    mul $t5, $t5, 4
+    mul $t5, $t5, 4 
     add $s0, $t5, $t0
     div $t5, $t5, 4
-    lw $s0, ($s0)
+    lw $s0, ($s0) # $s0 = SparseA[a]
 
     mul $t6, $t6, 4
     add $s1, $t6, $t2
     div $t6, $t6, 4
-    lw $s1, ($s1)
+    lw $s1, ($s1) # $s1 = SparseB[b]
 
     add $s0, $s0, $s1
 
-    sw $s0, ($t4)
+    sw $s0, ($t4) # SparseC[c] = SparseA[a] + SparseB[b]
 
-    addi $t4, 4
-    addi $t5, 1
-    addi $t6, 4
-    addi $t7, 1
+    addi $t4, 4 # SparseC[c] = SparseC[c] + 4
+    addi $t5, 1 # a++
+    addi $t6, 1 # b++
+    addi $t7, 1 # c++
 
     j while
 
